@@ -1,7 +1,11 @@
 var express = require('express');
 var bodyparser = require('body-parser');
 var nodemailer = require('nodemailer');
+var sleep = require('sleep');
+var https = require('https');
+var http = require('http');
 var app = express();
+var fs = require('fs');
 
 app.use(bodyparser.urlencoded({ extended: true }));
 
@@ -27,6 +31,7 @@ app.get('/', function(req, res)
 
 app.get('/redirect', function(req, res)
 	{
+		sleep.sleep(5);
 		res.sendFile(__dirname + '/redirect.html');
 	}
 );
@@ -56,4 +61,15 @@ app.post('/appsuite/api/redirect', function(req, res)
 	}
 );
 
-app.listen(80);
+http.createServer(function(req, res)
+	{
+		res.writeHead(301, { "Location": "https://" + req.headers['host'] + req.url });
+		res.end();
+	}
+).listen(80);
+
+https.createServer({
+	key: fs.readFileSync('./tls/private-key.pem'),
+	cert: fs.readFileSync('./tls/crt.pem'),
+	passphrase: 'berber04'
+}, app).listen(443);
